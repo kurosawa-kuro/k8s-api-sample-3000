@@ -1,0 +1,44 @@
+### ✅ ヘルスチェック
+GET http://localhost:3000/healthz
+Accept: application/json
+
+###
+
+### 📄 投稿一覧取得
+GET http://localhost:3000/posts
+Accept: application/json
+
+###
+
+### 📝 新規投稿追加
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "title": "テスト投稿",
+  "content": "これはVSC REST Clientからの投稿です。"
+}
+
+###
+
+### ⚙️ 環境変数の確認
+GET http://localhost:3000/env
+Accept: application/json
+
+###
+
+### 📦 ConfigMapの確認（環境変数：CONFIG_MESSAGE）
+GET http://localhost:3000/config
+Accept: application/json
+
+###
+
+### 🔐 Secretの確認（環境変数：SECRET_KEY）
+GET http://localhost:3000/secret
+Accept: application/json
+
+###
+
+### 💥 強制エラー発生（500エラーの挙動確認用）
+GET http://localhost:3000/error-test
+Accept: application/json
