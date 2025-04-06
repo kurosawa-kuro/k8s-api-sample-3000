@@ -7,8 +7,11 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
+// 3件の投稿データ
 let posts = [
-  { id: 1, title: '初期投稿', content: 'ようこそ' }
+  { id: 1, title: '初期投稿', content: 'ようこそ' },
+  { id: 2, title: '2件目の投稿', content: 'こんにちは' },
+  { id: 3, title: '3件目の投稿', content: 'こんばんは' }
 ];
 
 // ------------------------
@@ -17,6 +20,68 @@ let posts = [
 app.get('/healthz', (req, res) => {
   console.log('[GET /healthz] ヘルスチェック受信');
   res.send('ok');
+});
+
+// ------------------------
+// 負荷試験エンドポイント
+// ------------------------
+app.get('/load-test', (req, res) => {
+  // 本番環境では無効化
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      error: '負荷試験エンドポイントは本番環境では利用できません'
+    });
+  }
+
+  console.log('[GET /load-test] 負荷試験開始');
+
+  const durationMs = parseInt(req.query.duration) || 3000; // デフォルト3秒
+  const end = Date.now() + durationMs;
+
+  while (Date.now() < end) {
+    Math.sqrt(Math.random()); // CPU負荷を意図的に発生
+  }
+
+  console.log(`[GET /load-test] 負荷試験完了（${durationMs}ms）`);
+  res.json({
+    message: 'CPU負荷を発生させました',
+    duration: `${durationMs}ms`,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ------------------------
+// メモリ負荷試験エンドポイント
+// ------------------------
+app.get('/load-test/memory', (req, res) => {
+  // 本番環境では無効化
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      error: '負荷試験エンドポイントは本番環境では利用できません'
+    });
+  }
+
+  console.log('[GET /load-test/memory] メモリ負荷試験開始');
+
+  const size = parseInt(req.query.size) || 100; // デフォルト100MB
+  const durationMs = parseInt(req.query.duration) || 3000; // デフォルト3秒
+
+  // メモリを確保
+  const array = new Array(size * 1024 * 1024).fill('x');
+  const end = Date.now() + durationMs;
+
+  while (Date.now() < end) {
+    // メモリを操作して負荷を発生
+    array.sort();
+  }
+
+  console.log(`[GET /load-test/memory] メモリ負荷試験完了（${size}MB, ${durationMs}ms）`);
+  res.json({
+    message: 'メモリ負荷を発生させました',
+    size: `${size}MB`,
+    duration: `${durationMs}ms`,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // ------------------------
