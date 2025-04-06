@@ -1,13 +1,19 @@
 # デフォルトのシェルをbashに設定
 SHELL := /bin/bash
 
+# AWS関連の設定
+AWS_REGION ?= ap-northeast-1
+AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query Account --output text)
+ECR_REPOSITORY_NAME ?= k8s-api-sample
+IMAGE_TAG ?= latest
+
 # 環境変数の設定
 export PORT ?= 3000
 export CURRENT_ENV ?= development
 export CONFIG_MESSAGE ?= "テスト用ConfigMapメッセージ"
 export SECRET_KEY ?= "テスト用シークレット"
 
-.PHONY: help install start test test-watch clean
+.PHONY: help install start test test-watch clean docker-build docker-push ecr-login
 
 # ヘルプコマンド
 help:
@@ -17,6 +23,9 @@ help:
 	@echo "  make test         - テストを実行"
 	@echo "  make test-watch   - テストを監視モードで実行"
 	@echo "  make clean        - node_modulesを削除"
+	@echo "  make docker-build - Dockerイメージをビルド"
+	@echo "  make docker-push  - ECRにイメージをプッシュ"
+	@echo "  make ecr-login    - ECRにログイン"
 
 # 依存パッケージのインストール
 install:
@@ -44,6 +53,25 @@ clean:
 	@echo "🧹 node_modulesを削除します..."
 	@rm -rf node_modules
 	@echo "✅ クリーンアップ完了"
+
+# ECRログイン
+ecr-login:
+	@echo "🔐 ECRにログインします..."
+	@aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+	@echo "✅ ECRログイン完了"
+
+# Dockerイメージのビルド
+docker-build:
+	@echo "🏗️  Dockerイメージをビルドします..."
+	@docker build -t $(ECR_REPOSITORY_NAME):$(IMAGE_TAG) .
+	@docker tag $(ECR_REPOSITORY_NAME):$(IMAGE_TAG) $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(ECR_REPOSITORY_NAME):$(IMAGE_TAG)
+	@echo "✅ Dockerイメージのビルド完了"
+
+# ECRへのプッシュ
+docker-push: ecr-login
+	@echo "⬆️  ECRにイメージをプッシュします..."
+	@docker push $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(ECR_REPOSITORY_NAME):$(IMAGE_TAG)
+	@echo "✅ ECRプッシュ完了"
 
 # デフォルトターゲット
 .DEFAULT_GOAL := help
