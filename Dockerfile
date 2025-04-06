@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 依存パッケージをインストール（開発依存パッケージも含む）
-RUN npm ci
+RUN npm install
 
 # アプリケーションのソースコードをコピー
 COPY . .
@@ -23,13 +23,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # 本番用の依存パッケージのみをインストール
-RUN npm ci --only=production
+RUN npm install --production
 
 # ビルドステージからアプリケーションコードをコピー
 COPY --from=builder /app/index.js ./
 
 # 非rootユーザーを作成
-RUN addgroup --system appgroup && adduser --system --group appgroup appuser
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 # アプリケーションのポートを公開

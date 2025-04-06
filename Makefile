@@ -52,7 +52,7 @@ help:
 	@echo "  make docker-build - 本番用Dockerイメージをビルド"
 	@echo "  make docker-push  - ECRにイメージをプッシュ"
 	@echo "  make docker-local-build - ローカル用Dockerイメージをビルド"
-	@echo "  make docker-local-run   - ローカルでDockerコンテナを実行"
+	@echo "  make docker-local-run   - ローカルでDockerコンテナを実行（フォアグラウンド）"
 	@echo "  make docker-local-stop  - ローカルで実行中のDockerコンテナを停止"
 	@echo ""
 	@echo "🔐 AWS操作:"
@@ -124,8 +124,8 @@ docker-local-build:
 	@echo "✅ ローカル用Dockerイメージのビルド完了"
 
 docker-local-run:
-	@echo "🚀 ローカルでDockerコンテナを実行します..."
-	@docker run -d \
+	@echo "🚀 ローカルでDockerコンテナを実行します（Ctrl+Cで停止）..."
+	@docker run \
 		--name $(APP_NAME)-local \
 		-p $(APP_PORT):$(APP_PORT) \
 		-e NODE_ENV=development \
@@ -134,8 +134,7 @@ docker-local-run:
 		-e CONFIG_MESSAGE="ローカル開発用ConfigMapメッセージ" \
 		-e SECRET_KEY="ローカル開発用シークレット" \
 		$(APP_NAME)-local:$(APP_VERSION)
-	@echo "✅ コンテナを起動しました"
-	@echo "📝 アクセスURL: http://localhost:$(APP_PORT)"
+	@echo "✅ コンテナを停止しました"
 
 docker-local-stop:
 	@echo "🛑 ローカルで実行中のDockerコンテナを停止します..."
